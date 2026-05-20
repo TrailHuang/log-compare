@@ -1,0 +1,50 @@
+{
+  "standard_logs_dir": "/home/data/standard_logs",
+  "log_types": [
+    {
+      "name": "CMD",
+      "delimiter": "|++|",
+      "file_pattern": "CMD_*.txt*",
+      "field_names": "cmd_fields.json",
+      "match_keys": [27, 28, 29, 30, 24, 21],
+      "required_fields": ["0-10", "18-19", 22, "24-37", 43],
+      "filter_fields": [53]
+    },
+    {
+      "name": "DES",
+      "delimiter": "|++|",
+      "file_pattern": "DES_*.txt*",
+      "field_names": "cmd_fields.json",
+      "match_keys": [27, 28, 29, 30, 24, 21],
+      "required_fields": ["0-10", "18-19", 22, "24-37", 43],
+      "filter_fields": [53]
+    },
+    {
+      "name": "FRA",
+      "delimiter": "|++|",
+      "file_pattern": "FRA_*.txt*",
+      "field_names": "evt_fields.json",
+      "match_keys": [33, 34, 35, 36, 30, 24],
+      "required_fields": ["0-10", "18-19", "21-22", 24, "27-28", "30-41", 43, 55, "68-73"],
+      "filter_fields": [22, 60]
+    },
+    {
+      "name": "PRC",
+      "delimiter": "|++|",
+      "file_pattern": "PRC_*.txt*",
+      "field_names": "prc_fields.json",
+      "match_keys": [33, 34, 35, 36, 30, 24],
+      "required_fields": ["0-10", "18-19", "21-22", 24, "27-28", "30-41", 43],
+      "filter_fields": [22, 59]
+    },
+    {
+      "name": "EVT",
+      "delimiter": "|++|",
+      "file_pattern": "EVT_*.txt*",
+      "field_names": "evt_fields.json",
+      "match_keys": [33, 34, 35, 36, 30, 24],
+      "required_fields": ["0-10", "18-19", "21-22", 24, "27-28", "30-41", 43, 55, "68-73"],
+      "filter_fields": [22, 60]
+    }
+  ]
+}
