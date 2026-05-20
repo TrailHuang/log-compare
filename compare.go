@@ -38,21 +38,16 @@ func compareLogType(standardDir, logDir string, ltCfg *config.LogTypeConfig) (*m
 		return nil, err
 	}
 
-	stdByMatchKey := matcher.GroupByMatchKey(toPtrSlice(stdResult.Records), ltCfg.MatchKeys)
-	logByMatchKey := matcher.GroupByMatchKey(toPtrSlice(logResult.Records), ltCfg.MatchKeys)
+	stdGroups := matcher.GroupByMatchKey(toPtrSlice(stdResult.Records), ltCfg.MatchKeys)
+	logGroups := matcher.GroupByMatchKey(toPtrSlice(logResult.Records), ltCfg.MatchKeys)
 
-	common, logOnly, stdOnly := matcher.GetMatchKeyStats(logByMatchKey, stdByMatchKey)
+	common, logOnly, stdOnly := matcher.GetMatchKeyStats(logGroups, stdGroups)
 
 	var comparisonDetails []model.ComparisonResult
 	recordsWithDiff := 0
 
-	stdRemaining := toPtrSlice(stdResult.Records)
-
 	for _, logRecord := range logResult.Records {
-		var matchedRecord *model.LogRecord
-		var matchFound bool
-
-		matchedRecord, stdRemaining, matchFound = matcher.FindMatchAndRemove(&logRecord, stdRemaining, ltCfg.MatchKeys)
+		matchedRecord, matchFound := matcher.FindMatchInMap(&logRecord, stdGroups, ltCfg.MatchKeys)
 
 		var diffs []model.FieldDiff
 		if matchedRecord != nil {
@@ -60,6 +55,7 @@ func compareLogType(standardDir, logDir string, ltCfg *config.LogTypeConfig) (*m
 			if len(diffs) > 0 {
 				recordsWithDiff++
 			}
+			matcher.RemoveFromMap(stdGroups, ltCfg.MatchKeys, matchedRecord)
 		}
 
 		missing := validator.ValidateRequired(&logRecord, ltCfg)
@@ -80,8 +76,8 @@ func compareLogType(standardDir, logDir string, ltCfg *config.LogTypeConfig) (*m
 		LogType:           ltCfg.Name,
 		TotalLogRecords:   len(logResult.Records),
 		TotalStdRecords:   len(stdResult.Records),
-		MatchKeyCount:     len(logByMatchKey),
-		StdMatchKeyCount:  len(stdByMatchKey),
+		MatchKeyCount:     len(logGroups),
+		StdMatchKeyCount:  len(stdGroups),
 		CommonMatchKeys:   common,
 		LogOnlyMatchKeys:  logOnly,
 		StdOnlyMatchKeys:  stdOnly,

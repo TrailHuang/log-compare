@@ -2,6 +2,7 @@ package reader
 
 import (
 	"archive/tar"
+	"fmt"
 	"io"
 	"log-compare/config"
 	"log-compare/model"
@@ -27,6 +28,7 @@ func readTarFile(filePath string, ltCfg *config.LogTypeConfig) (*ReadResult, err
 			break
 		}
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "警告: tar 条目读取失败 %s: %v\n", filePath, err)
 			continue
 		}
 		if !strings.HasSuffix(hdr.Name, ".txt") {
@@ -35,6 +37,7 @@ func readTarFile(filePath string, ltCfg *config.LogTypeConfig) (*ReadResult, err
 
 		content, err := io.ReadAll(tr)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "警告: tar 内容读取失败 %s/%s: %v\n", filePath, hdr.Name, err)
 			continue
 		}
 
@@ -49,7 +52,10 @@ func readTarFile(filePath string, ltCfg *config.LogTypeConfig) (*ReadResult, err
 			}
 
 			if delimiter == "" {
-				delimiter = detectDelimiter(line)
+				delimiter, err = detectDelimiter(line)
+				if err != nil {
+					return nil, fmt.Errorf("%s/%s: %w", filePath, hdr.Name, err)
+				}
 			}
 
 			fields := splitLine(line, delimiter)

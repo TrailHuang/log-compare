@@ -1,14 +1,17 @@
 package reader
 
 import (
+	"fmt"
 	"log-compare/config"
 	"log-compare/model"
+	"os"
 )
 
 // ReadResult 读取结果
 type ReadResult struct {
-	Records []model.LogRecord
-	Header  []string
+	Records       []model.LogRecord
+	Header        []string
+	SkippedFiles  []string
 }
 
 // ReadLogs 根据配置读取所有匹配的日志文件
@@ -20,6 +23,7 @@ func ReadLogs(logDir string, ltCfg *config.LogTypeConfig) (*ReadResult, error) {
 
 	var allRecords []model.LogRecord
 	var header []string
+	var skippedFiles []string
 
 	for _, f := range files {
 		var result *ReadResult
@@ -32,6 +36,8 @@ func ReadLogs(logDir string, ltCfg *config.LogTypeConfig) (*ReadResult, error) {
 		}
 
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "警告: 跳过文件 %s: %v\n", f, err)
+			skippedFiles = append(skippedFiles, f)
 			continue
 		}
 
@@ -42,7 +48,8 @@ func ReadLogs(logDir string, ltCfg *config.LogTypeConfig) (*ReadResult, error) {
 	}
 
 	return &ReadResult{
-		Records: allRecords,
-		Header:  header,
+		Records:      allRecords,
+		Header:       header,
+		SkippedFiles: skippedFiles,
 	}, nil
 }

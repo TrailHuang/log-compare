@@ -8,12 +8,23 @@ import (
 	"os"
 )
 
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+)
+
 func main() {
 	configPath := flag.String("config", "", "配置文件路径")
 	stdDir := flag.String("stddir", "", "标准日志目录")
 	logDir := flag.String("logdir", "", "待对比日志目录")
 	outputPath := flag.String("output", "", "报告输出文件路径（可选）")
+	showVersion := flag.Bool("version", false, "显示版本信息")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("log-compare %s (built: %s)\n", Version, BuildTime)
+		os.Exit(0)
+	}
 
 	if *configPath == "" || *stdDir == "" || *logDir == "" {
 		fmt.Println("用法: log-compare -config <配置文件> -stddir <标准日志目录> -logdir <待对比日志目录> [-output <报告文件>]")

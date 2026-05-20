@@ -18,6 +18,70 @@ func BuildMatchKey(record *model.LogRecord, matchKeys []int) string {
 	return strings.Join(parts, "|")
 }
 
+// GroupByMatchKey 按 match_key 对记录分组，返回 map 供快速查找
+func GroupByMatchKey(records []*model.LogRecord, matchKeys []int) map[string][]*model.LogRecord {
+	groups := make(map[string][]*model.LogRecord)
+	for _, r := range records {
+		key := BuildMatchKey(r, matchKeys)
+		groups[key] = append(groups[key], r)
+	}
+	return groups
+}
+
+// FindMatchInMap 在 map 中查找匹配记录
+// 优先返回 match_key 相同的记录，若无则返回差异最小的记录
+// 返回匹配的记录、是否精确匹配
+func FindMatchInMap(record *model.LogRecord, groups map[string][]*model.LogRecord, matchKeys []int) (*model.LogRecord, bool) {
+	if len(groups) == 0 {
+		return nil, false
+	}
+
+	targetKey := BuildMatchKey(record, matchKeys)
+
+	if candidates, ok := groups[targetKey]; ok && len(candidates) > 0 {
+		return candidates[0], true
+	}
+
+	return FindBestMatchInMap(record, groups), false
+}
+
+// FindBestMatchInMap 在 map 中查找差异最小的记录（遍历所有值）
+func FindBestMatchInMap(record *model.LogRecord, groups map[string][]*model.LogRecord) *model.LogRecord {
+	var best *model.LogRecord
+	minDiff := len(record.Fields) + 1
+
+	for _, candidates := range groups {
+		for _, c := range candidates {
+			diff := countDifferences(record, c)
+			if diff < minDiff {
+				minDiff = diff
+				best = c
+			}
+		}
+	}
+
+	return best
+}
+
+// RemoveFromMap 从 map 中移除指定记录
+func RemoveFromMap(groups map[string][]*model.LogRecord, matchKeys []int, record *model.LogRecord) {
+	key := BuildMatchKey(record, matchKeys)
+	candidates, ok := groups[key]
+	if !ok {
+		return
+	}
+
+	for i, c := range candidates {
+		if c == record {
+			groups[key] = append(candidates[:i], candidates[i+1:]...)
+			if len(groups[key]) == 0 {
+				delete(groups, key)
+			}
+			return
+		}
+	}
+}
+
 // FindMatch 在候选集中查找匹配记录
 // 优先返回 match_key 相同的记录，若无则返回差异最小的记录
 func FindMatch(record *model.LogRecord, candidates []*model.LogRecord, matchKeys []int) (*model.LogRecord, bool) {
@@ -131,16 +195,6 @@ func countDifferences(a, b *model.LogRecord) int {
 		}
 	}
 	return count
-}
-
-// GroupByMatchKey 按 match_key 对记录分组
-func GroupByMatchKey(records []*model.LogRecord, matchKeys []int) map[string][]*model.LogRecord {
-	groups := make(map[string][]*model.LogRecord)
-	for _, r := range records {
-		key := BuildMatchKey(r, matchKeys)
-		groups[key] = append(groups[key], r)
-	}
-	return groups
 }
 
 // GetMatchKeyStats 获取 match_key 统计信息

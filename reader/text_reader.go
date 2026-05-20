@@ -2,6 +2,7 @@ package reader
 
 import (
 	"bufio"
+	"fmt"
 	"log-compare/config"
 	"log-compare/model"
 	"os"
@@ -30,7 +31,10 @@ func readTextFile(filePath string, ltCfg *config.LogTypeConfig) (*ReadResult, er
 		}
 
 		if delimiter == "" {
-			delimiter = detectDelimiter(line)
+			delimiter, err = detectDelimiter(line)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", filePath, err)
+			}
 		}
 
 		fields := splitLine(line, delimiter)
@@ -53,17 +57,20 @@ func readTextFile(filePath string, ltCfg *config.LogTypeConfig) (*ReadResult, er
 	}, scanner.Err()
 }
 
-func detectDelimiter(line string) string {
+func detectDelimiter(line string) (string, error) {
 	if strings.Contains(line, "|++|") {
-		return "|++|"
+		return "|++|", nil
 	}
 	if strings.Contains(line, ",") {
-		return ","
+		return ",", nil
 	}
 	if strings.Contains(line, "\t") {
-		return "\t"
+		return "\t", nil
 	}
-	return "|"
+	if strings.Contains(line, "|") {
+		return "|", nil
+	}
+	return "", fmt.Errorf("无法自动检测分隔符，请在配置中指定 delimiter")
 }
 
 func splitLine(line, delimiter string) []string {

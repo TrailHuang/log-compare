@@ -39,8 +39,6 @@ type LogTypeResult struct {
 	RecordsWithDiff   int
 	RequiredStats     RequiredFieldStats
 	ComparisonDetails []ComparisonResult
-	LogOnlyRecords    []LogRecord
-	StdOnlyRecords    []LogRecord
 }
 
 // RequiredFieldStats 必填字段统计
