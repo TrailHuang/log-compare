@@ -77,10 +77,7 @@ func main() {
 	}
 
 	if totalDiff > 0 {
-		if totalDiff > 255 {
-			totalDiff = 255
-		}
-		os.Exit(totalDiff)
+		os.Exit(1)
 	}
 }
 
