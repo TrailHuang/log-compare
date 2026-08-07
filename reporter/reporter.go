@@ -2,9 +2,10 @@ package reporter
 
 import (
 	"fmt"
-	"github.com/TrailHuang/log-compare/model"
 	"os"
 	"strings"
+
+	"github.com/TrailHuang/log-compare/model"
 )
 
 // PrintTerminal 打印终端摘要报告
@@ -86,6 +87,9 @@ func WriteFile(results map[string]*model.LogTypeResult, outputPath string) error
 				diffCount++
 				w.writeln(fmt.Sprintf("\n记录 #%d:", diffCount))
 				w.writeln(fmt.Sprintf("  文件: %s (行号: %d)", cr.LogRecord.FilePath, cr.LogRecord.LineNumber))
+				if cr.MatchedRecord != nil {
+					w.writeln(fmt.Sprintf("  标准日志: %s (行号: %d)", cr.MatchedRecord.FilePath, cr.MatchedRecord.LineNumber))
+				}
 				w.writeln(fmt.Sprintf("  Match Key: %s", cr.MatchKey))
 				w.writeln(fmt.Sprintf("  差异字段:"))
 				for _, d := range cr.Differences {

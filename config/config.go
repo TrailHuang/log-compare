@@ -12,12 +12,14 @@ import (
 // Config 顶层配置结构
 type Config struct {
 	LogTypes  []LogTypeConfig `json:"log_types"`
+	LogDir    string          `json:"log_dir,omitempty"`
 	configDir string
 }
 
 // LogTypeConfig 单个日志类型配置
 type LogTypeConfig struct {
 	Name           string          `json:"name"`
+	LogPath        string          `json:"log_path,omitempty"`
 	Delimiter      string          `json:"delimiter,omitempty"`
 	FilePattern    string          `json:"file_pattern"`
 	FieldNamesRaw  json.RawMessage `json:"field_names,omitempty"`
@@ -183,4 +185,16 @@ func (lt *LogTypeConfig) GetFieldName(index int) string {
 		return name
 	}
 	return fmt.Sprintf("field_%d", index+1)
+}
+
+// GetEffectiveLogDir 获取日志类型的实际日志目录
+// 优先使用 log_dir + log_path 拼接，其次使用 log_path，最后使用外部传入的基础目录
+func (c *Config) GetEffectiveLogDir(logType *LogTypeConfig, baseLogDir string) string {
+	if c.LogDir != "" && logType.LogPath != "" {
+		return filepath.Join(c.LogDir, logType.LogPath)
+	}
+	if logType.LogPath != "" {
+		return logType.LogPath
+	}
+	return baseLogDir
 }

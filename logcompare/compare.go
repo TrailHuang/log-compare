@@ -37,7 +37,7 @@ func Run(cfg *config.Config, stdDir, logDir string) (*model.OverallResult, error
 	}
 
 	for _, ltCfg := range cfg.LogTypes {
-		result, err := compareLogType(stdDir, logDir, &ltCfg)
+		result, err := compareLogType(cfg, stdDir, logDir, &ltCfg)
 		if err != nil {
 			return nil, fmt.Errorf("对比日志类型 %s 失败: %w", ltCfg.Name, err)
 		}
@@ -47,8 +47,9 @@ func Run(cfg *config.Config, stdDir, logDir string) (*model.OverallResult, error
 	return overall, nil
 }
 
-func compareLogType(standardDir, logDir string, ltCfg *config.LogTypeConfig) (*model.LogTypeResult, error) {
-	logResult, err := reader.ReadLogs(logDir, ltCfg)
+func compareLogType(cfg *config.Config, standardDir, logDir string, ltCfg *config.LogTypeConfig) (*model.LogTypeResult, error) {
+	effectiveLogDir := cfg.GetEffectiveLogDir(ltCfg, logDir)
+	logResult, err := reader.ReadLogs(effectiveLogDir, ltCfg)
 	if err != nil {
 		return nil, err
 	}
