@@ -11,14 +11,14 @@ LDFLAGS=-ldflags "-s -w \
 
 build:
 	@mkdir -p $(BUILD_DIR)
-	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/log-compare
 	@echo "Build success: $(BUILD_DIR)/$(BINARY_NAME)"
 
 build-all:
 	@mkdir -p $(BUILD_DIR)
-	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)_amd64 .
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)_amd64 ./cmd/log-compare
 	@echo "Build success: $(BUILD_DIR)/$(BINARY_NAME)_amd64"
-	GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)_arm64 .
+	GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)_arm64 ./cmd/log-compare
 	@echo "Build success: $(BUILD_DIR)/$(BINARY_NAME)_arm64"
 
 package: build-all
