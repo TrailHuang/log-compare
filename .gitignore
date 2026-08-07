@@ -99,3 +99,5 @@ testdata/test_cases/test_logs/PRC_230100FC007_SINO_20251205105140000.txt
 report_*.txt
 coverage.out
 report.txt
+coverage.out
+report.txt
