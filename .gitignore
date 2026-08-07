@@ -97,3 +97,5 @@ testdata/test_cases/test_logs/DES_230100FC007_SINO_20260109174013001.txt.tar
 testdata/test_cases/test_logs/EVT_230100FC007_SINO_20260428114602000.txt
 testdata/test_cases/test_logs/PRC_230100FC007_SINO_20251205105140000.txt
 report_*.txt
+coverage.out
+report.txt
