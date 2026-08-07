@@ -15,6 +15,7 @@ package logcompare
 
 import (
 	"fmt"
+
 	"github.com/TrailHuang/log-compare/comparator"
 	"github.com/TrailHuang/log-compare/config"
 	"github.com/TrailHuang/log-compare/matcher"
@@ -71,12 +72,17 @@ func compareLogType(cfg *config.Config, standardDir, logDir string, ltCfg *confi
 		matchedRecord, matchFound := matcher.FindMatchInMap(&logRecord, stdGroups, ltCfg.MatchKeys)
 
 		var diffs []model.FieldDiff
-		if matchedRecord != nil {
+		// 仅在精确匹配（match_key 命中）时才进行字段比较并消耗标准端记录。
+		// 模糊匹配回退会把不应配对的记录强行配对，产生伪差异并污染标准池。
+		if matchFound && matchedRecord != nil {
 			diffs = comparator.CompareFields(&logRecord, matchedRecord, ltCfg)
 			if len(diffs) > 0 {
 				recordsWithDiff++
 			}
 			matcher.RemoveFromMap(stdGroups, ltCfg.MatchKeys, matchedRecord)
+		} else {
+			// 未精确匹配：不参与字段比较，matchedRecord 置空以免误导报告
+			matchedRecord = nil
 		}
 
 		missing := validator.ValidateRequired(&logRecord, ltCfg)
