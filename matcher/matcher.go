@@ -1,7 +1,7 @@
 package matcher
 
 import (
-	"log-compare/model"
+	"github.com/TrailHuang/log-compare/model"
 	"strings"
 )
 

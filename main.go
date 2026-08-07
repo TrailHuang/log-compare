@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log-compare/config"
-	"log-compare/reporter"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/TrailHuang/log-compare/config"
+	"github.com/TrailHuang/log-compare/logcompare"
+	"github.com/TrailHuang/log-compare/reporter"
 )
 
 var (
@@ -48,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	overall, err := Run(cfg, *stdDir, *logDir)
+	overall, err := logcompare.Run(cfg, *stdDir, *logDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "对比失败: %v\n", err)
 		os.Exit(1)

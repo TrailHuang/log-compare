@@ -2,7 +2,7 @@ package reader
 
 import (
 	"archive/tar"
-	"log-compare/config"
+	"github.com/TrailHuang/log-compare/config"
 	"os"
 	"path/filepath"
 	"testing"

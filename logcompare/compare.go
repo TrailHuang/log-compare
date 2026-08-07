@@ -1,16 +1,36 @@
-package main
+// Package logcompare 提供日志对比的核心库能力。
+//
+// 它既可作为命令行工具使用（见根目录的 main 包），也可被其他 Go 项目
+// 作为库引用。典型的库用法：
+//
+//	cfg, err := config.Load("conf/log_info.json")
+//	if err != nil { return err }
+//	overall, err := logcompare.Run(cfg, "path/to/standard", "path/to/log")
+//	if err != nil { return err }
+//	for name, r := range overall.LogTypeResults {
+//	    // 处理每个日志类型的对比结果 r
+//	    _ = name
+//	}
+package logcompare
 
 import (
 	"fmt"
-	"log-compare/comparator"
-	"log-compare/config"
-	"log-compare/matcher"
-	"log-compare/model"
-	"log-compare/reader"
-	"log-compare/validator"
+	"github.com/TrailHuang/log-compare/comparator"
+	"github.com/TrailHuang/log-compare/config"
+	"github.com/TrailHuang/log-compare/matcher"
+	"github.com/TrailHuang/log-compare/model"
+	"github.com/TrailHuang/log-compare/reader"
+	"github.com/TrailHuang/log-compare/validator"
 )
 
-// Run 执行日志对比
+// Run 对指定的标准日志目录与待对比日志目录执行完整的日志比对流程，
+// 并按配置中的日志类型聚合返回总体对比结果。
+//
+// 参数 cfg 为已加载并通过 Validate 校验的配置；stdDir 为标准日志所在目录；
+// logDir 为待对比日志所在目录。
+//
+// 返回值 overall 包含每个日志类型的对比明细与统计信息；err 表示流程中
+// 出现的任何错误（例如读取失败、配置错误等）。
 func Run(cfg *config.Config, stdDir, logDir string) (*model.OverallResult, error) {
 	overall := &model.OverallResult{
 		LogTypeResults: make(map[string]*model.LogTypeResult),

@@ -1,8 +1,8 @@
 package validator
 
 import (
-	"log-compare/config"
-	"log-compare/model"
+	"github.com/TrailHuang/log-compare/config"
+	"github.com/TrailHuang/log-compare/model"
 	"testing"
 )
 

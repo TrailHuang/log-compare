@@ -2,7 +2,7 @@ package reporter
 
 import (
 	"fmt"
-	"log-compare/model"
+	"github.com/TrailHuang/log-compare/model"
 	"os"
 	"strings"
 )
