@@ -66,7 +66,9 @@ func compareLogType(cfg *config.Config, standardDir, logDir string, ltCfg *confi
 	common, logOnly, stdOnly := matcher.GetMatchKeyStats(logGroups, stdGroups)
 
 	var comparisonDetails []model.ComparisonResult
+	var unmatchedLogList []model.UnmatchedRecord
 	recordsWithDiff := 0
+	unmatchedLogRecords := 0
 
 	for _, logRecord := range logResult.Records {
 		matchedRecord, matchFound := matcher.FindMatchInMap(&logRecord, stdGroups, ltCfg.MatchKeys)
@@ -81,7 +83,12 @@ func compareLogType(cfg *config.Config, standardDir, logDir string, ltCfg *confi
 			}
 			matcher.RemoveFromMap(stdGroups, ltCfg.MatchKeys, matchedRecord)
 		} else {
-			// 未精确匹配：不参与字段比较，matchedRecord 置空以免误导报告
+			// 未精确匹配：待对比端多出的记录计为差异，不参与字段比较
+			unmatchedLogRecords++
+			unmatchedLogList = append(unmatchedLogList, model.UnmatchedRecord{
+				Record:   &logRecord,
+				MatchKey: matcher.BuildMatchKey(&logRecord, ltCfg.MatchKeys),
+			})
 			matchedRecord = nil
 		}
 
@@ -99,19 +106,50 @@ func compareLogType(cfg *config.Config, standardDir, logDir string, ltCfg *confi
 
 	requiredStats := validator.ValidateAll(toPtrSlice(logResult.Records), ltCfg)
 
+	// 标准端在精确匹配消耗后剩余的记录即为"缺少"的记录
+	unmatchedStdRecords := countGroupedRecords(stdGroups)
+	unmatchedStdList := collectGroupedRecords(stdGroups, ltCfg.MatchKeys)
+
 	return &model.LogTypeResult{
-		LogType:           ltCfg.Name,
-		TotalLogRecords:   len(logResult.Records),
-		TotalStdRecords:   len(stdResult.Records),
-		MatchKeyCount:     len(logGroups),
-		StdMatchKeyCount:  len(stdGroups),
-		CommonMatchKeys:   common,
-		LogOnlyMatchKeys:  logOnly,
-		StdOnlyMatchKeys:  stdOnly,
-		RecordsWithDiff:   recordsWithDiff,
-		RequiredStats:     requiredStats,
-		ComparisonDetails: comparisonDetails,
+		LogType:             ltCfg.Name,
+		TotalLogRecords:     len(logResult.Records),
+		TotalStdRecords:     len(stdResult.Records),
+		MatchKeyCount:       len(logGroups),
+		StdMatchKeyCount:    len(stdGroups),
+		CommonMatchKeys:     common,
+		LogOnlyMatchKeys:    logOnly,
+		StdOnlyMatchKeys:    stdOnly,
+		RecordsWithDiff:     recordsWithDiff,
+		UnmatchedLogRecords: unmatchedLogRecords,
+		UnmatchedStdRecords: unmatchedStdRecords,
+		UnmatchedLogList:    unmatchedLogList,
+		UnmatchedStdList:    unmatchedStdList,
+		RequiredStats:       requiredStats,
+		ComparisonDetails:   comparisonDetails,
 	}, nil
+}
+
+// countGroupedRecords 统计分组中剩余待匹配记录的总条数
+func countGroupedRecords(groups map[string][]*model.LogRecord) int {
+	total := 0
+	for _, candidates := range groups {
+		total += len(candidates)
+	}
+	return total
+}
+
+// collectGroupedRecords 收集分组中剩余待匹配的记录明细（含各自的 match key）
+func collectGroupedRecords(groups map[string][]*model.LogRecord, matchKeys []int) []model.UnmatchedRecord {
+	var list []model.UnmatchedRecord
+	for _, candidates := range groups {
+		for _, c := range candidates {
+			list = append(list, model.UnmatchedRecord{
+				Record:   c,
+				MatchKey: matcher.BuildMatchKey(c, matchKeys),
+			})
+		}
+	}
+	return list
 }
 
 func toPtrSlice(records []model.LogRecord) []*model.LogRecord {

@@ -72,10 +72,10 @@ func main() {
 		fmt.Printf("\n详细报告已写入: %s\n", absPath)
 	}
 
-	// 计算差异总数：字段差异记录 + 仅标准端有 + 仅待对比端有
+	// 计算差异总数：字段差异记录 + 仅待对比端有 + 仅标准端有
 	totalDiff := 0
 	for _, r := range overall.LogTypeResults {
-		totalDiff += r.RecordsWithDiff + r.LogOnlyMatchKeys + r.StdOnlyMatchKeys
+		totalDiff += r.RecordsWithDiff + r.UnmatchedLogRecords + r.UnmatchedStdRecords
 	}
 
 	if totalDiff > 0 {

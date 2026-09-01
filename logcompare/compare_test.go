@@ -255,9 +255,20 @@ func TestCompareLogType_MultipleRecords_OneUnmatched(t *testing.T) {
 	if r.TotalLogRecords != 3 || r.TotalStdRecords != 2 {
 		t.Errorf("记录数不符: log=%d std=%d", r.TotalLogRecords, r.TotalStdRecords)
 	}
-	// 只有第 2 条精确匹配且有差异；第 3 条未匹配不应计差异
+	// 只有第 2 条精确匹配且有差异；第 3 条未匹配不应计字段差异，但应计为"多出"记录
 	if r.RecordsWithDiff != 1 {
 		t.Errorf("期望 1 条差异, 实际 %d", r.RecordsWithDiff)
+	}
+	// 第 3 条在标准端无对应（多出），应计差异
+	if r.UnmatchedLogRecords != 1 {
+		t.Errorf("期望 1 条多出记录, 实际 %d", r.UnmatchedLogRecords)
+	}
+	if r.UnmatchedStdRecords != 0 {
+		t.Errorf("期望 0 条缺少记录, 实际 %d", r.UnmatchedStdRecords)
+	}
+	// 总差异 = 字段差异 + 多出
+	if r.DiffRecordCount() != 2 {
+		t.Errorf("期望总差异 2, 实际 %d", r.DiffRecordCount())
 	}
 	// 检查第三条未匹配
 	unmatched := 0
@@ -268,6 +279,37 @@ func TestCompareLogType_MultipleRecords_OneUnmatched(t *testing.T) {
 	}
 	if unmatched != 1 {
 		t.Errorf("期望 1 条未匹配, 实际 %d", unmatched)
+	}
+}
+
+func TestCompareLogType_UnmatchedStdRecord(t *testing.T) {
+	tmp := t.TempDir()
+	stdDir := filepath.Join(tmp, "std")
+	logDir := filepath.Join(tmp, "log")
+	// 标准端 2 条，日志端 1 条（标准端 k3|k4 缺少对应）
+	stdContent := "h0|h1|h2|h3|h4|h5\nk1|k2|c1|d|e|f\nk3|k4|c2|d|e|f\n"
+	logContent := "h0|h1|h2|h3|h4|h5\nk1|k2|c1|d|e|f\n"
+	writeLogFiles(t, stdDir, map[string]string{"A_1.txt": stdContent})
+	writeLogFiles(t, logDir, map[string]string{"A_1.txt": logContent})
+
+	lt := newLTConfig("A", "|", "A_*.txt", []int{0, 1}, nil, nil)
+	cfg := &config.Config{}
+	r, err := compareLogType(cfg, stdDir, logDir, lt)
+	if err != nil {
+		t.Fatalf("compareLogType 失败: %v", err)
+	}
+	if r.RecordsWithDiff != 0 {
+		t.Errorf("无字段差异, 期望 0, 实际 %d", r.RecordsWithDiff)
+	}
+	if r.UnmatchedLogRecords != 0 {
+		t.Errorf("期望 0 条多出记录, 实际 %d", r.UnmatchedLogRecords)
+	}
+	// 标准端 k3|k4 缺少对应，应计 1 条差异
+	if r.UnmatchedStdRecords != 1 {
+		t.Errorf("期望 1 条缺少记录, 实际 %d", r.UnmatchedStdRecords)
+	}
+	if r.DiffRecordCount() != 1 {
+		t.Errorf("期望总差异 1, 实际 %d", r.DiffRecordCount())
 	}
 }
 
